@@ -1,0 +1,8 @@
+{
+	"python.analysis.extraPaths": [
+		"./Data",
+		"./moduler",
+		"./HovedFiler",
+		"./matlab_plot"
+	]
+}
