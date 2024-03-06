@@ -1,10 +1,11 @@
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-% Prosjekt0X_.....
+% Prosjekt01_Numerisk_Integrasjon
 %
-% Hensikten med programmet er å ....
+% Hensikten med programmet er å simulere påfylling og tapping i en
+% vannbeholder
 % Følgende sensorer brukes:
 % - Lyssensor
-
+%
 %--------------------------------------------------------------------------
 
 
@@ -22,7 +23,7 @@ filename = 'P01_MeasNumeriskIntegrasjon.mat';
 
 % +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 %                      INITIALIZE EQUIPMENT
-% Initialiser styrestikke, sensorer og motorer.
+% Initialiser styrestikke og sensorer.
 if online
     
     % LEGO EV3 og styrestikke
@@ -34,7 +35,7 @@ if online
     myColorSensor = colorSensor(mylego);
 else
     % Dersom online=false lastes datafil.
-    load(filename)
+    load('P01_MeasNumeriskIntegrasjon_pumpe.mat')
 end
 
 disp('Equipment initialized.')
@@ -75,7 +76,7 @@ while ~JoyMainSwitch
     % Registrerer lysmåling Lys(k)
     Lys(k) = double(readLightIntensity(myColorSensor,'reflected'));
     
-    % Data fra styrestikke. Utvid selv med andre knapper og akser
+    % Data fra styrestikke.
     [JoyAxes,JoyButtons] = HentJoystickVerdier(joystick);
     JoyMainSwitch = JoyButtons(1);
 
@@ -114,4 +115,7 @@ while ~JoyMainSwitch
     k = k + 1;
 end
 
+% Etter at løkken er avsluttet, lagre de akkumulerte dataene til en fil
+save(filename, 'Tid', 'Lys', 'Flow', 'Volum');
 
+disp('Data saved to file.');
