@@ -70,7 +70,7 @@ else
 %For data fra fart 2, sett nullflow til 28.5 og k til 
 nullflow = 28.5; % Eksempelverdi, juster dette basert på dine behov eller kalibreringsresultater
 Ts_nominell = 0.2; % Nominell verdi for samplingstiden
-k = 1;
+k = 61;
 end
 
 

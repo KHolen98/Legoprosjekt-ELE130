@@ -15,9 +15,9 @@
 % Alltid lurt å rydde workspace opp først
 clear; close all
 % Skal prosjektet gjennomføres online mot EV3 eller mot lagrede data?
-online = true;
+online = false;
 % Spesifiser et beskrivende filnavn for lagring av måledata
-filename = 'P01_MeasNumeriskIntegrasjon.mat';
+filename = 'P01_MeasNumeriskIntegrasjon_numint';
 %--------------------------------------------------------------------------
 
 
@@ -35,7 +35,7 @@ if online
     myColorSensor = colorSensor(mylego);
 else
     % Dersom online=false lastes datafil.
-    load('P01_MeasNumeriskIntegrasjon_pumpe.mat')
+    load('P01_MeasNumeriskIntegrasjon_numint')
 end
 
 disp('Equipment initialized.')
@@ -52,70 +52,43 @@ set(0,'defaultAxesFontSize',14)
 set(0,'defaultTextFontSize',16)
 %----------------------------------------------------------------------
 
+% Anta at nullflow og Ts_nominell er kjente eller beregnede verdier fra tidligere kjøringer
+nullflow = Lys(1); % Eksempelverdi, juster dette basert på dine behov eller kalibreringsresultater
+Ts_nominell = 0.2; % Nominell verdi for samplingstiden
+% Initialisering av variabler
+k = 1;
+Volum = zeros(1, length(Tid));
+Flow = zeros(1, length(Tid));
+Ts = zeros(1, length(Tid)) + Ts_nominell; % Anta konstant Ts hvis ikke annet er spesifisert
 
-% setter skyteknapp til 0, og tellevariabel k=1
-JoyMainSwitch=0;
-k=1;
-
-% Anta at 'skyteknapp' er en variabel som kontrollerer while-løkken
-while ~JoyMainSwitch
-     
- 
-    % GET TIME AND MEASUREMENT
-    % Registrerer måletidspunkt Tid(k)
-    if k == 1
-        tic
-        Tid(1) = 0;
-        nullflow = double(readLightIntensity(myColorSensor,'reflected'));
-        Volum(1) = 0; % Initialverdi for Volum
-        Ts_nominell = 0.2; % Nominell initialverdi for Ts
-    else
-        Tid(k) = toc;
+while k <= length(Tid)
+    if k > 1
+        Ts(k) = Tid(k) - Tid(k-1); % Beregn tidssteg hvis mulig
     end
-
-    % Registrerer lysmåling Lys(k)
-    Lys(k) = double(readLightIntensity(myColorSensor,'reflected'));
     
-    % Data fra styrestikke.
-    [JoyAxes,JoyButtons] = HentJoystickVerdier(joystick);
-    JoyMainSwitch = JoyButtons(1);
-
-    % CONDITIONS, CALCULATIONS AND SET MOTOR POWER
-    % Beregner Flow(k) og Volum(k)
-    Flow(k) = Lys(k) - nullflow;
+    Flow(k) = Lys(k) - nullflow; % Beregn flow basert på lysmåling minus nullflow
+    
     if k > 1
-        Ts(k) = Tid(k) - Tid(k-1);
-    else
-        Ts(k) = Ts_nominell;
+        Volum(k) = Volum(k-1) + Flow(k) * Ts(k); % Euler-integrasjon for volum
     end
-    if k > 1
-        Volum(k) = Volum(k-1) + Flow(k) * Ts(k); % Eulers forovermetode
-    end
-
-    % PLOT DATA
-    % Aktiver fig1
-    figure(fig1)
-
-    % Plotter Flow
-    subplot(2,1,1)
-    plot(Tid(1:k), Flow(1:k));
-    title('Flow')
-    xlabel('Tid [sek]')
-
-    % Plotter Volum
-    subplot(2,1,2)
-    plot(Tid(1:k), Volum(1:k));
-    title('Volum')
-    xlabel('Tid [sek]')
-
-    % Tegn nå
-    drawnow
-
-    % Oppdaterer tellevariabel
+    
+    % Plotting
+    figure(fig1);
+    subplot(2, 1, 1);
+    plot(Tid(1:k), Flow(1:k), 'LineWidth', 2);
+    title('Flow');
+    xlabel('Tid [sek]');
+    
+    subplot(2, 1, 2);
+    plot(Tid(1:k), Volum(1:k), 'LineWidth', 2);
+    title('Volum');
+    xlabel('Tid [sek]');
+    
+    drawnow;
+    
     k = k + 1;
 end
 
-% Etter at løkken er avsluttet, lagre de akkumulerte dataene til en fil
+% Lagre de oppdaterte dataene til en fil
 save(filename, 'Tid', 'Lys', 'Flow', 'Volum');
-
 disp('Data saved to file.');
