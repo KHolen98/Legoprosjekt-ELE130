@@ -1,7 +1,7 @@
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 % Prosjekt02_Filtrering
 %
-% Hensikten med programmet er å ....
+% Hensikten med programmet er å filtrer en simulert temperaturtransmitter 
 % Følgende sensorer brukes:
 % - Lyssensor
 %
@@ -14,7 +14,7 @@
 % Alltid lurt å rydde workspace opp først
 clear; close all
 % Skal prosjektet gjennomføres online mot EV3 eller mot lagrede data?
-online = true;
+online = false;
 % Spesifiser et beskrivende filnavn for lagring av måledata
 filename = 'P02_MeasFiltrering';
 %--------------------------------------------------------------------------
@@ -68,14 +68,18 @@ set(0,'defaultTextFontSize',16)
 % setter skyteknapp til 0, og initialiser variabler
 JoyMainSwitch=0;
 k=1;
+if online;
 Tid = [];
 Lys = [];
 y_FIR = [];
 y_IIR = [];
+end
 
 % Angi parametere for filtrering
 M = 10; % Antall målinger i FIR-filter
 alfa = 0.5; % Parameter i IIR-filter
+OldFilteredValue = 0; % Eller en annen initialverdi etter behov
+
 
 while ~JoyMainSwitch
     %+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -104,17 +108,7 @@ while ~JoyMainSwitch
         pause(0.01); % Simuler EV3-Matlab kommunikasjon i online=false
     end
 
-    % Implementer logikk for y_FIR og y_IIR basert på Lys(k)
 
-    if k == 1
-        % Initialiser første verdi basert på dine funksjoner
-        y_FIR(k) = Lys(k); % Eksempel, erstatt med faktisk logikk
-        y_IIR(k) = Lys(k); % Eksempel, erstatt med faktisk logikk
-    else
-        % Beregn filtrerte verdier
-        y_FIR(k) = FIR_filter(Lys, M, k); % Anta at FIR_filter er implementert
-        y_IIR(k) = IIR_filter(Lys, alfa, k); % Anta at IIR_filter er implementert
-    end
     %--------------------------------------------------------------
 
 
@@ -130,13 +124,14 @@ while ~JoyMainSwitch
 
     if k == 1
         % Initialiser første verdi basert på dine funksjoner
-        y_FIR(k) = Lys(k); % Eksempel, erstatt med faktisk logikk
-        y_IIR(k) = Lys(k); % Eksempel, erstatt med faktisk logikk
+        y_FIR(k) = FIR_filter(Lys(1:k), M); % Eksempel, erstatt med faktisk logikk
+        y_IIR(k) = IIR_filter(OldFilteredValue, Lys(k), alfa); % Eksempel, erstatt med faktisk logikk
     else
         % Beregn filtrerte verdier
-        y_FIR(k) = FIR_filter(Lys, M, k); % Anta at FIR_filter er implementert
-        y_IIR(k) = IIR_filter(Lys, alfa, k); % Anta at IIR_filter er implementert
+        y_FIR(k) = FIR_filter(Lys(1:k), M); % Anta at FIR_filter er implementert
+        y_IIR(k) = IIR_filter(y_IIR(k-1), Lys(k), alfa); % Anta at IIR_filter er implementert
     end
+
 
 
     %--------------------------------------------------------------
@@ -178,6 +173,9 @@ while ~JoyMainSwitch
     k=k+1;
 end
 
+save(filename, 'Tid', 'Lys');
+
+disp('Data saved to file.');
 %------------------------------------------------------------------
 
 
