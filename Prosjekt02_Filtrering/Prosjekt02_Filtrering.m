@@ -154,10 +154,10 @@ while ~JoyMainSwitch
 
     % Plot av lysintensitet og filtrerte signaler
     subplot(2,1,1);
-    plot(Tid(1:k), Lys(1:k), 'b', Tid(1:k), y_FIR(1:k), 'r', Tid(1:k), y_IIR(1:k), 'g');
-    title('Lysintensitet og filtrerte signaler');
+    plot(Tid(1:k), Lys(1:k), 'b-*', Tid(1:k), y_FIR(1:k), 'r-*', Tid(1:k), y_IIR(1:k), 'g-*');
+    title('Simulert temperatur og filtrerte signaler');
     xlabel('Tid [s]');
-    ylabel('Intensitet');
+    ylabel('Temperatur');
     legend('Original', 'FIR', 'IIR');
 
 
