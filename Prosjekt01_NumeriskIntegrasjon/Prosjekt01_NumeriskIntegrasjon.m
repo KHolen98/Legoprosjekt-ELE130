@@ -49,7 +49,7 @@ screen = get(0,'Screensize');
 set(fig1,'Position',[1,1,0.5*screen(3), 0.5*screen(4)])
 set(0,'defaultTextInterpreter','latex');
 set(0,'defaultAxesFontSize',14)
-set(0,'defaultTextFontSize',16)
+set(0,'defaultTextFontSize',18)
 %----------------------------------------------------------------------
 
 % Anta at nullflow og Ts_nominell er kjente eller beregnede verdier fra tidligere kjøringer
@@ -76,13 +76,15 @@ while k <= length(Tid)
     figure(fig1);
     subplot(2, 1, 1);
     plot(Tid(1:k), u(1:k), 'LineWidth', 2);
-    title('Strømningshastighet, u(k)');
+    title('Str$\o$mningshastighet, u(k)');
     xlabel('Tid [sek]');
+    ylabel('Str$\o$mningshastighet [cl/s]');
     
     subplot(2, 1, 2);
     plot(Tid(1:k), y(1:k), 'LineWidth', 2);
     title('Volum, y(k)');
     xlabel('Tid [sek]');
+    ylabel('Volum [cl]');
     
     drawnow;
     
