@@ -1,0 +1,120 @@
+% Prosjekt03_Numerisk_derivasjon
+%
+% Hensikten med programmet er å demonstrere numerisk derivasjon med LEGO EV3
+%
+% Følgende sensorer brukes:
+% - Lyssensor
+% - TouchSensor
+
+clear; close all;
+
+% Konfigurasjon for online eller offline kjøring
+online = false;
+filename = 'P03_Numerisk_derivasjon.mat';
+
+if online
+    mylego = legoev3('USB');
+    joystick = vrjoystick(1);
+    myColorSensor = colorSensor(mylego);
+    myTouchSensor = touchSensor(mylego);
+else
+    load(filename);
+end
+
+disp('Equipment initialized.');
+
+% Grafikkinnstillinger
+fig1 = figure;
+screen = get(0,'Screensize');
+set(fig1,'Position',[1, 1, 0.5*screen(3), 0.5*screen(4)]);
+set(0,'defaultTextInterpreter','latex');
+set(0,'defaultAxesFontSize',14);
+set(0,'defaultTextFontSize',16);
+
+% Initialisering av variabler
+JoyMainSwitch = 0;
+k = 1;
+Tid = [];
+Avstand = [];
+Bryter = [];
+u_f = [];
+v = [];
+v_f = [];
+Ts = [];
+alfa = 0.1; % IIR-filter parameter
+
+while ~JoyMainSwitch
+    if k == 1
+        tic;
+        Tid(1) = 0;
+        Ts(1) = 0.01; % Initial tidsskritt
+    else
+        Tid(k) = toc;
+        Ts(k) = Tid(k) - Tid(k-1); % Beregner faktisk tidsskritt
+    end
+    
+    if online
+        rawLys = double(readLightIntensity(myColorSensor, 'reflected'));
+        Avstand(k) = rawLys * 10; 
+        Bryter(k) = readTouch(myTouchSensor);
+    
+
+
+        if k == 1
+            u_f(k) = Avstand(k);  % Initialiser u_f(1) direkte for første punkt
+            else
+            u_f(k) = IIR_filter(u_f(k-1), Avstand(k), alfa);
+        end
+    
+
+    if Bryter(k) == 0
+        v(k) = 0;
+        v_f(k) = 0;
+    end
+
+    else
+        if k > 1
+           
+            v(k) = BakoverDerivasjon([Avstand(k-1), Avstand(k)], Ts(k));
+            v_f(k) = BakoverDerivasjon([u_f(k-1), u_f(k)], Ts(k));
+        end
+    
+    end
+
+    [JoyAxes, JoyButtons] = HentJoystickVerdier(joystick);
+    JoyMainSwitch = JoyButtons(1);
+
+    % Plotting
+    figure(fig1);
+    subplot(4, 1, 1);
+    plot(Tid, Avstand, 'b-', Tid, u_f, 'r-');
+    title('Avstand og Filtrert Avstand');
+    xlabel('Tid [s]'); ylabel('Avstand');
+
+    subplot(4, 1, 2);
+    plot(Tid, Bryter);
+    title('Bryter Status');
+    xlabel('Tid [s]'); ylabel('Trykket / Ikke Trykket');
+
+    subplot(4, 1, 3);
+    plot(Tid, v, 'g-');
+    title('Fart');
+    xlabel('Tid [s]'); ylabel('v [m/s]');
+
+    subplot(4, 1, 4);
+    plot(Tid, v_f, 'm-');
+    title('Filtrert Fart');
+    xlabel('Tid [s]'); ylabel('v_f [m/s]');
+
+    drawnow;
+    
+    k = k + 1;
+    pause(0.01);
+end
+
+if online
+    save(filename, 'Tid', 'Avstand', 'Bryter', 'u_f', 'v', 'v_f', 'Ts');
+
+
+    disp('Data saved to file.');
+end
