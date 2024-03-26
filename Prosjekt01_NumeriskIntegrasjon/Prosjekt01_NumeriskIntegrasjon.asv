@@ -1,11 +1,10 @@
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-% Prosjekt01_Numerisk_Integrasjon
+% Prosjekt01_Numer
 %
-% Hensikten med programmet er å simulere påfylling og tapping i en
-% vannbeholder
+% Hensikten med programmet er å ....
 % Følgende sensorer brukes:
 % - Lyssensor
-%
+
 %--------------------------------------------------------------------------
 
 
@@ -15,15 +14,15 @@
 % Alltid lurt å rydde workspace opp først
 clear; close all
 % Skal prosjektet gjennomføres online mot EV3 eller mot lagrede data?
-online = false;
+online = true;
 % Spesifiser et beskrivende filnavn for lagring av måledata
-filename = 'P01_MeasNumeriskIntegrasjon_numint';
+filename = 'P01_MeasNumeriskIntegrasjon.mat';
 %--------------------------------------------------------------------------
 
 
 % +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 %                      INITIALIZE EQUIPMENT
-% Initialiser styrestikke og sensorer.
+% Initialiser styrestikke, sensorer og motorer.
 if online
     
     % LEGO EV3 og styrestikke
@@ -35,7 +34,7 @@ if online
     myColorSensor = colorSensor(mylego);
 else
     % Dersom online=false lastes datafil.
-    load('P01_MeasNumeriskIntegrasjon_numint')
+    load(filename)
 end
 
 disp('Equipment initialized.')
@@ -52,45 +51,67 @@ set(0,'defaultAxesFontSize',14)
 set(0,'defaultTextFontSize',16)
 %----------------------------------------------------------------------
 
-% Anta at nullflow og Ts_nominell er kjente eller beregnede verdier fra tidligere kjøringer
-nullflow = Lys(1); % Eksempelverdi, juster dette basert på dine behov eller kalibreringsresultater
-Ts_nominell = 0.2; % Nominell verdi for samplingstiden
-% Initialisering av variabler
-k = 1;
-y = zeros(1, length(Tid));
-u = zeros(1, length(Tid));
-Ts = zeros(1, length(Tid)) + Ts_nominell; % Anta konstant Ts hvis ikke annet er spesifisert
 
-while k <= length(Tid)
-    if k > 1
-        Ts(k) = Tid(k) - Tid(k-1); % Beregn tidssteg hvis mulig
+% setter skyteknapp til 0, og tellevariabel k=1
+JoyMainSwitch=0;
+k=1;
+
+% Anta at 'skyteknapp' er en variabel som kontrollerer while-løkken
+while ~JoyMainSwitch
+     
+ 
+    % GET TIME AND MEASUREMENT
+    % Registrerer måletidspunkt Tid(k)
+    if k == 1
+        tic
+        Tid(1) = 0;
+        nullflow = double(readLightIntensity(myColorSensor,'reflected'));
+        Volum(1) = 0; % Initialverdi for Volum
+        Ts_nominell = 0.2; % Nominell initialverdi for Ts
+    else
+        Tid(k) = toc;
     end
+
+    % Registrerer lysmåling Lys(k)
+    Lys(k) = double(readLightIntensity(myColorSensor,'reflected'));
     
-    u(k) = Lys(k) - nullflow; % Beregn flow basert på lysmåling minus nullflow
-    
+    % Data fra styrestikke. Utvid selv med andre knapper og akser
+    [JoyAxes,JoyButtons] = HentJoystickVerdier(joystick);
+    JoyMainSwitch = JoyButtons(1);
+
+    % CONDITIONS, CALCULATIONS AND SET MOTOR POWER
+    % Beregner Flow(k) og Volum(k)
+    Flow(k) = Lys(k) - nullflow;
     if k > 1
-        y(k) = EulerBackward(y(k-1), Ts(k), u(k)); % Euler-integrasjon for volum
+        Ts(k) = Tid(k) - Tid(k-1);
+    else
+        Ts(k) = Ts_nominell;
     end
-    
-    % Plotting
-    figure(fig1);
-    subplot(2, 1, 1);
-    plot(Tid(1:k), u(1:k), 'LineWidth', 2);
-    title('Str$\o$mningshastighet, u(k)');
-    xlabel('Tid [sek]');
-    ylabel('Strømningshastighet, [cl/s]');
-    
-    subplot(2, 1, 2);
-    plot(Tid(1:k), y(1:k), 'LineWidth', 2);
-    title('Volum, y(k)');
-    xlabel('Tid [sek]');
-    ylabel('');
-    
-    drawnow;
-    
+    if k > 1
+        Volum(k) = Volum(k-1) + Flow(k) * Ts(k); % Eulers forovermetode
+    end
+
+    % PLOT DATA
+    % Aktiver fig1
+    figure(fig1)
+
+    % Plotter Flow
+    subplot(2,1,1)
+    plot(Tid(1:k), Flow(1:k));
+    title('Flow')
+    xlabel('Tid [sek]')
+
+    % Plotter Volum
+    subplot(2,1,2)
+    plot(Tid(1:k), Volum(1:k));
+    title('Volum')
+    xlabel('Tid [sek]')
+
+    % Tegn nå
+    drawnow
+
+    % Oppdaterer tellevariabel
     k = k + 1;
 end
 
-% Lagre de oppdaterte dataene til en fil
-save('P01_LysTidVolum_01', 'Tid', 'Lys', 'u', 'y');
-disp('Data saved to file.');
+

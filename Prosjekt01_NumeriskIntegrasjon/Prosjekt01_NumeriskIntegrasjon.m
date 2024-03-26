@@ -49,7 +49,7 @@ screen = get(0,'Screensize');
 set(fig1,'Position',[1,1,0.5*screen(3), 0.5*screen(4)])
 set(0,'defaultTextInterpreter','latex');
 set(0,'defaultAxesFontSize',14)
-set(0,'defaultTextFontSize',18)
+set(0,'defaultTextFontSize',16)
 %----------------------------------------------------------------------
 
 % Anta at nullflow og Ts_nominell er kjente eller beregnede verdier fra tidligere kjøringer
@@ -57,8 +57,8 @@ nullflow = Lys(1); % Eksempelverdi, juster dette basert på dine behov eller kal
 Ts_nominell = 0.2; % Nominell verdi for samplingstiden
 % Initialisering av variabler
 k = 1;
-y = zeros(1, length(Tid));
-u = zeros(1, length(Tid));
+Volum = zeros(1, length(Tid));
+Flow = zeros(1, length(Tid));
 Ts = zeros(1, length(Tid)) + Ts_nominell; % Anta konstant Ts hvis ikke annet er spesifisert
 
 while k <= length(Tid)
@@ -66,25 +66,23 @@ while k <= length(Tid)
         Ts(k) = Tid(k) - Tid(k-1); % Beregn tidssteg hvis mulig
     end
     
-    u(k) = Lys(k) - nullflow; % Beregn flow basert på lysmåling minus nullflow
+    Flow(k) = Lys(k) - nullflow; % Beregn flow basert på lysmåling minus nullflow
     
     if k > 1
-        y(k) = EulerBackward(y(k-1), Ts(k), u(k)); % Euler-integrasjon for volum
+        Volum(k) = Volum(k-1) + Flow(k) * Ts(k); % Euler-integrasjon for volum
     end
     
     % Plotting
     figure(fig1);
     subplot(2, 1, 1);
-    plot(Tid(1:k), u(1:k), 'LineWidth', 2);
-    title('Str$\o$mningshastighet, u(k)');
+    plot(Tid(1:k), Flow(1:k), 'LineWidth', 2);
+    title('Flow');
     xlabel('Tid [sek]');
-    ylabel('Str$\o$mningshastighet [cl/s]');
     
     subplot(2, 1, 2);
-    plot(Tid(1:k), y(1:k), 'LineWidth', 2);
-    title('Volum, y(k)');
+    plot(Tid(1:k), Volum(1:k), 'LineWidth', 2);
+    title('Volum');
     xlabel('Tid [sek]');
-    ylabel('Volum [cl]');
     
     drawnow;
     
@@ -92,5 +90,5 @@ while k <= length(Tid)
 end
 
 % Lagre de oppdaterte dataene til en fil
-save('P01_LysTidVolum_01', 'Tid', 'Lys', 'u', 'y');
+save(filename, 'Tid', 'Lys', 'Flow', 'Volum');
 disp('Data saved to file.');

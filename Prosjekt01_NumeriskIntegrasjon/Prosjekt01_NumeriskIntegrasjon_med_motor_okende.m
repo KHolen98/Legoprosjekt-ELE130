@@ -15,9 +15,9 @@
 % Alltid lurt å rydde workspace opp først
 clear; close all
 % Skal prosjektet gjennomføres online mot EV3 eller mot lagrede data?
-online = false;
+online = true;
 % Spesifiser et beskrivende filnavn for lagring av måledata
-filename = 'P01_MeasNumeriskIntegrasjon_med_motor_fart_2';
+filename = 'P01_MeasNumeriskIntegrasjon_med_motor_fart_okende';
 %--------------------------------------------------------------------------
 
 
@@ -64,17 +64,13 @@ k=1;
 
 %Andre parametre og variabler
 if online
-startK = 1;
 else
 % Anta at nullflow og Ts_nominell er kjente eller beregnede verdier fra tidligere kjøringer
 %For data fra fart 1, sett nullflow til 28 og k til 61
-%For data fra fart 2, sett nullflow til 28.55 og k til 72
-%For data for økende, sett nullflow til 29.7 og k til 64
-nullflow = 28.55; % Eksempelverdi, juster dette basert på dine behov eller kalibreringsresultater
+%For data fra fart 2, sett nullflow til 28.5 og k til 
+nullflow = 28.5; % Eksempelverdi, juster dette basert på dine behov eller kalibreringsresultater
 Ts_nominell = 0.2; % Nominell verdi for samplingstiden
-startK = 72; % Endre dette tallet til ønsket startverdi for k
-startvolum = 0;
-k = startK;
+k = 1;
 end
 
 
@@ -89,8 +85,7 @@ while ~JoyMainSwitch
             Volum(1) = 0; % Initialverdi for volum
             Ts_nominell = 0.2; % Nominell initialverdi for samplingstid
         else
-           
-            Tid(startK) = toc;
+            Tid(k) = toc;
         end
         Lys(k) = double(readLightIntensity(myColorSensor, 'reflected'));
 
@@ -100,11 +95,10 @@ while ~JoyMainSwitch
     end
 
     % Beregner flow og volum
-    if k == startK
+    if k == 1
         Flow(k) = 0; % Ingen flow ved start
-        Volum(k) = startvolum;
     else
-        Flow(k) = Lys(k-1) - nullflow; % Anta nullflow er definert
+        Flow(k) = Lys(k) - nullflow; % Anta nullflow er definert
         Ts(k) = Tid(k) - Tid(k-1);
         Volum(k) = Volum(k-1) + Flow(k) * Ts(k);
     end
@@ -112,10 +106,7 @@ while ~JoyMainSwitch
     if online
     % Justerer motorhastigheten basert på tid
     if Tid(k) > 4
-        motorA.Speed = 2; % Setter en lav hastighet etter 4 sekunder
-        %Kode for økende fart
-        % motorA.Speed = .5+(0.3*(k-4)); % Setter en lav hastighet som øker etter 4 sekunder
-       
+        motorA.Speed = .5+(0.3*(k-4)); % Setter en lav hastighet som øker etter 4 sekunder
     else
         motorA.Speed = 0; % Normal hastighet før 4 sekunder
     end
@@ -128,22 +119,15 @@ end
 
     % Plotter Flow
     subplot(2,1,1)
-    plot(Tid(startK:k)-Tid(startK), Flow(startK:k));
+    plot(Tid(1:k), Flow(1:k));
     title('Flow')
-     %xlim 0 til 20 på fart 1 og 2, 0 til 10 på økende
-    xlim([0 20]);
     xlabel('Tid [sek]')
-    ylabel('Flow [liter per sek]')
 
     % Plotter Volum
     subplot(2,1,2)
-    plot(Tid(startK:k)-Tid(startK), Volum(startK:k));
+    plot(Tid(1:k), Volum(1:k));
     title('Volum')
-    %xlim 0 til 20 på fart 1 og 2, 0 til 10 på økende
-    xlim([0 20]);
     xlabel('Tid [sek]')
-    ylabel('Volum [liter]')
-    
 
     % Tegn nå
     drawnow
