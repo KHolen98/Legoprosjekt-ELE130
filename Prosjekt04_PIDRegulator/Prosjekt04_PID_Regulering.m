@@ -18,7 +18,7 @@ clear; close all
 % Skal prosjektet gjennomfoeres online mot EV3 eller mot lagrede data?
 online = true;
 % Spesifiser et beskrivende filnavn for lagring av måledata
-filename = 'P04__med_integratorbegrensing.mat'; % Navnet på datafilen når online=0.
+filename = 'P04_stille_inn_reg_f_med imp.mat'; % Navnet på datafilen når online=0.
 %--------------------------------------------------------------------------
 
 
@@ -98,17 +98,18 @@ while ~JoyMainSwitch
     %             CONDITIONS, CALCULATIONS AND SET MOTOR POWER
 
     % parametre
-    u0 = 0;
-    Kp = 0; % Kan justeres for proporsjonalforsterkningen. for forsøket med stor Kp er KP satt til 2. For å vise at motoren gir 0 ved null avvik, 0.1
-    Ki = 0; % Kan justeres for integral del. 0.1 er brukt i forsøkene, med unntaktet under
+    u0 = 0; % Står som 0 i hele den obligatoriske oppgaven
+    Kp = 0.2; % Kan justeres for proporsjonalforsterkningen. for forsøket med stor Kp er KP satt til 2. For å vise at motoren gir 0 ved null avvik, 0.1
+    Ki = 0.12; % Kan justeres for integral del. 0.1 er brukt i forsøkene, med unntaktet under
     % Kode brukt for oppgave d) i I-del. 
     %if Tid(k) > 4
     %    Ki = 0.1;
     %else
     %    Ki = 0.3;
     %end
-    Kd = 0; % Kan justeres for derivat del
-    alfa = 1;
+    Kd = 0.005; % Kan justeres for derivat del
+    alfa = 0.6; %settes til en i forsøkene for P og I. Er også satt til 1 i forsøk D a og b. I forsøk 1 i c) er alfa 0.6 og i forsøk 2 0.3. For prøve og feile settes alfa til 0.6
+    OldFilteredValue = 0;
     
     if k==1
         % Initialverdier
@@ -146,7 +147,7 @@ while ~JoyMainSwitch
         % Lag kode for bidragene P(k), I(k) og D(k)
         P(k) = Kp * e(k); %direkte proporsjonal med feilen e(k)
         I(k) = I(k-1) + Ki * e(k) * Ts(k); % Akkumulerer feilen over tid
-        e_f(k) = e(k); % Filtrering kan legges til her for D-delen
+        e_f(k) = IIR_filter(OldFilteredValue, e(k), alfa); % Filtrering kan legges til her for D-delen
         D(k) = Kd * BakoverDerivasjon([e(k-1), e(k)], Ts(k));
     end
     
@@ -154,7 +155,8 @@ while ~JoyMainSwitch
     % Integratorbegrensing
     % -------------------------------------------------------------
 
-    %setter intergratorbegresingen til 1.000.000 i det siste I-forsøket
+    %setter intergratorbegresingen til 1.000.000 i det siste I-forsøket og
+    %ved rpøve og feileforsøket på PID-reulatoren
     I_max(k) = 100;
     I_min(k) = -100;
     
