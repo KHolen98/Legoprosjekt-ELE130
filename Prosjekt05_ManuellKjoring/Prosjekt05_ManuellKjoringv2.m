@@ -17,9 +17,9 @@
 % Alltid lurt å rydde workspace opp først
 clear; close all
 % Skal prosjektet gjennomføres online mot EV3 eller mot lagrede data?
-online = false;
+online = true;
 % Spesifiser et beskrivende filnavn for lagring av måledata
-filename = 'P04_MeasManuellKjoring_OMV.mat';
+filename = 'P04_MeasManuellKjoring_MF.mat';
 %--------------------------------------------------------------------------
 
 
