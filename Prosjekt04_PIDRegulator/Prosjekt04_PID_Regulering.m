@@ -14,11 +14,11 @@
 %                EXPERIMENT SETUP AND DATA FILENAME 
 %
 % Alltid lurt å rydde workspace opp først
-clear; close all
+clear; close all; clc;
 % Skal prosjektet gjennomfoeres online mot EV3 eller mot lagrede data?
-online = true;
+online = false;
 % Spesifiser et beskrivende filnavn for lagring av måledata
-filename = 'P04_stille_inn_reg_f_med imp.mat'; % Navnet på datafilen når online=0.
+filename = 'P04_P_motor_i_gang_kun_ved_avvik.mat'; % Navnet på datafilen når online=0.
 %--------------------------------------------------------------------------
 
 
@@ -100,14 +100,14 @@ while ~JoyMainSwitch
     % parametre
     u0 = 0; % Står som 0 i hele den obligatoriske oppgaven
     Kp = 0.2; % Kan justeres for proporsjonalforsterkningen. for forsøket med stor Kp er KP satt til 2. For å vise at motoren gir 0 ved null avvik, 0.1
-    Ki = 0.12; % Kan justeres for integral del. 0.1 er brukt i forsøkene, med unntaktet under
+    Ki = 0; % Kan justeres for integral del. 0.1 er brukt i forsøkene, med unntaktet under
     % Kode brukt for oppgave d) i I-del. 
     %if Tid(k) > 4
     %    Ki = 0.1;
     %else
     %    Ki = 0.3;
     %end
-    Kd = 0.005; % Kan justeres for derivat del
+    Kd = 0; % Kan justeres for derivat del
     alfa = 0.6; %settes til en i forsøkene for P og I. Er også satt til 1 i forsøk D a og b. I forsøk 1 i c) er alfa 0.6 og i forsøk 2 0.3. For prøve og feile settes alfa til 0.6
     OldFilteredValue = 0;
     
@@ -193,9 +193,9 @@ while ~JoyMainSwitch
     %
     figure(fig1)
     subplot(3,2,1)
-    plot(Tid(1:k),r(1:k),'r-'); % r (t) viser input fra joystick
+    plot(Tid(1:k+7),r(1:k+7),'r-'); % r (t) viser input fra joystick
     hold on
-    plot(Tid(1:k),y(1:k),'b-'); % y (t) viser vinkelhastighet som er et mål på rotasjon
+    plot(Tid(1:k+7),y(1:k+7),'b-'); % y (t) viser vinkelhastighet som er et mål på rotasjon
     hold off
     grid
     ylabel('[$^{\circ}$/s]')
