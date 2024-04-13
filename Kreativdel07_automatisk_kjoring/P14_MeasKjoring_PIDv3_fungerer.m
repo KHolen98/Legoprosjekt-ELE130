@@ -117,7 +117,7 @@ while ~JoyMainSwitch
             r = Lys(1);   
             e(k) = r - y;      
             P(k) = Kp * e(k); 
-            I(k) = 0; %min(max(I(k-1) + Ki * e(k) * Ts, I_min), I_max); % Integrator med begrensning
+            I(k) = 0; min(max(I(k-1) + Ki * e(k) * Ts, I_min), I_max); % Integrator med begrensning
             D(k) = 0; %Kd * (e(k) - e(k-1)) / Ts; % Enkel derivasjon
             u_A = u0 + P(k) + I(k) + D(k);
            
