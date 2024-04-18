@@ -21,9 +21,9 @@
 % Alltid lurt å rydde workspace opp først
 clear; close all
 % Skal prosjektet gjennomføres online mot EV3 eller mot lagrede data?
-online = true;
+online = false;
 % Spesifiser et beskrivende filnavn for lagring av måledata
-filename = 'P04_MeasManuellKjoring_Y.mat';
+filename = 'P04_MeasManuellKjoring_MF.mat';
 %--------------------------------------------------------------------------
 
 
@@ -110,7 +110,7 @@ hvitTerskel = 70;
 % Initialverdier for pådrag
 TVA = 0;
 TVB = 0;
-MAE(1) = 0
+MAE(1) = 0;
 
 
 while ~JoyMainSwitch
