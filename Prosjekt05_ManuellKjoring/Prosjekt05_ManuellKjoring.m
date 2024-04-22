@@ -23,7 +23,7 @@ clear; close all
 % Skal prosjektet gjennomføres online mot EV3 eller mot lagrede data?
 online = false;
 % Spesifiser et beskrivende filnavn for lagring av måledata
-filename = 'P04_MeasManuellKjoring_MF.mat';
+filename = 'P04_MeasManuellKjoring_KH.mat';
 %--------------------------------------------------------------------------
 
 
@@ -196,10 +196,10 @@ while ~JoyMainSwitch
     if k==1
         % Initialverdier
         Ts(1) = 0.01;  % nominell verdi
-        Lys_sum(1) = 0
+        Lys_sum(1) = 0;
     else
         % Beregninger av Ts og variable som avhenger av initialverdi
-        Ts(k) = Tid(k) - Tid(k-1)
+        Ts(k) = Tid(k) - Tid(k-1);
     end
 
     % Andre beregninger som ikke avhenger av initialverdi
@@ -213,7 +213,7 @@ while ~JoyMainSwitch
     
     % MAE
     if k > 1
-        MAE(k) = Lys_sum(k) / k 
+        MAE(k) = Lys_sum(k) / k ;
     end
 
     % Beregn pådrag for fremover/tilbake-bevegelse og sving - kode kopiert

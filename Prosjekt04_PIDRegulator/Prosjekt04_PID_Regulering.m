@@ -18,7 +18,7 @@ clear; close all; clc;
 % Skal prosjektet gjennomfoeres online mot EV3 eller mot lagrede data?
 online = false;
 % Spesifiser et beskrivende filnavn for lagring av måledata
-filename = 'P04_P_motor_i_gang_kun_ved_avvik.mat'; % Navnet på datafilen når online=0.
+filename = 'P04_D_cf2.mat'; % Navnet på datafilen når online=0.
 %--------------------------------------------------------------------------
 
 
@@ -148,7 +148,7 @@ while ~JoyMainSwitch
         P(k) = Kp * e(k); %direkte proporsjonal med feilen e(k)
         I(k) = I(k-1) + Ki * e(k) * Ts(k); % Akkumulerer feilen over tid
         e_f(k) = IIR_filter(OldFilteredValue, e(k), alfa); % Filtrering kan legges til her for D-delen
-        D(k) = Kd * BakoverDerivasjon([e(k-1), e(k)], Ts(k));
+        D(k) = Kd * BakoverDerivasjon([e_f(k-1), e(k)], Ts(k));
     end
     
     % -------------------------------------------------------------
