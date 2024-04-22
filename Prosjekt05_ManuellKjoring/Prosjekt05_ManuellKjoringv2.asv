@@ -274,7 +274,7 @@ while ~JoyMainSwitch
     plot(Tid(1:k),PowerA(1:k), 'b');
     title('Power A')
     hold on
-    plot(Tid(1:k),PowerB(1:k), 'r--');
+    plot(Tid(1:k),PowerB(1:k), 'r');
     title('Power B')
     xlabel('Tid [sek]')
 
@@ -286,7 +286,7 @@ while ~JoyMainSwitch
     subplot(3,2,5)
     plot(Tid(1:k), TVA(1:k), 'b'); % Plott TVA i blått
     hold on;
-    plot(Tid(1:k), TVB(1:k), 'r--'); % Plott TVB i rødt
+    plot(Tid(1:k), TVB(1:k), 'r'); % Plott TVB i rødt
     title('Total Variation for Motor A og B');
     xlabel('Tid [sek]');
     ylabel('Total Variation');
