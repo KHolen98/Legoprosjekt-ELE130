@@ -85,7 +85,7 @@ hvitTerskel = 70;
 % Initialverdier for pådrag
 TVA(1) = 0;
 TVB(1) = 0;
-MAE(1) = 0;
+
 
 
 
@@ -178,7 +178,8 @@ while ~JoyMainSwitch
     if k==1
         % Initialverdier
         Ts(1) = 0.01;  % nominell verdi
-        Lys_sum(1) = 0;
+        IAE(1) = 0;
+        MAE(1) = 0;
     else
         % Beregninger av Ts og variable som avhenger av initialverdi
         Ts(k) = Tid(k) - Tid(k-1);
@@ -190,30 +191,31 @@ while ~JoyMainSwitch
     
     % Numerisk integrasjon av avviket |e(k)|
     if k > 1
-        Lys_sum(k) = Lys_sum(k-1) + abs(e(k)) * Ts(k); % Eulers forovermetode
+        IAE(k) = IAE(k-1) + abs(e(k)) * Ts(k); % Eulers bakovermetode
     end
     
  
 
     % MAE
     if k > 1
-        MAE(k) = Lys_sum(k) / k ;
+        MAE(k) = (1/k)*sum(abs(e));
     end
 
     % Beregn pådrag for fremover/tilbake-bevegelse og sving 
     
-    fremoverKraft = a * JoyForover(k);
-    svingKraft = b * JoySving(k); % 'b' er en skalafaktor for sving, f.eks. 0.5
+    % Disse er ikke i bruk og gir error
+    % fremoverKraft = a * JoyForover(k);
+    % svingKraft = b * JoySving(k); % 'b' er en skalafaktor for sving, f.eks. 0.5
 
     
-     % Oppdater pådrag for hver motor
-    PowerA(k) = a * JoyForover(k) - b * JoySving(k)  % Eksempel på beregning
-    PowerB(k) = a * JoyForover(k) + b * JoySving(k)
+    % Oppdater pådrag for hver motor
+    PowerA(k) = a * JoyForover(k) - b * JoySving(k);  % Eksempel på beregning
+    PowerB(k) = a * JoyForover(k) + b * JoySving(k);
 
     % Beregn Total Variation for hver motor
     if k > 1
-        TVA(k) = TVA(k-1) + abs(PowerA(k) - PowerA(k-1))
-        TVB(k) = TVB(k-1) + abs(PowerB(k) - PowerB(k-1))
+        TVA(k) = TVA(k-1) + abs(PowerA(k) - PowerA(k-1));
+        TVB(k) = TVB(k-1) + abs(PowerB(k) - PowerB(k-1));
     end
 
 
@@ -247,7 +249,7 @@ while ~JoyMainSwitch
     hold on
     
     plot(Tid(1:k),Lys(1)*ones(1,k),'k--')
-    title('Lys reflektert')
+    title('Referanse r(k) og lys(k)')
     xlabel('Tid [sek]')
 
     subplot(3,2,2)
@@ -262,7 +264,7 @@ while ~JoyMainSwitch
 
     subplot(3,2,6)
     plot(Tid(1:k),MAE(1:k));
-    title('MAE')
+    title('MAE(k)')
     xlabel('Tid [sek]')
 
     %subplot(2,4,7)
@@ -279,15 +281,15 @@ while ~JoyMainSwitch
     xlabel('Tid [sek]')
 
     subplot(3,2,4)
-    plot(Tid(1:k),Lys_sum(1:k));
-    title('IAE - Sum lys for konkurranse')
+    plot(Tid(1:k),IAE(1:k));
+    title('IAE(k)')
     xlabel('Tid [sek]')
 
     subplot(3,2,5)
     plot(Tid(1:k), TVA(1:k), 'b'); % Plott TVA i blått
     hold on;
     plot(Tid(1:k), TVB(1:k), 'r'); % Plott TVB i rødt
-    title('Total Variation for Motor A og B');
+    title('TV for Motor A og B');
     xlabel('Tid [sek]');
     ylabel('Total Variation');
     legend('TVA', 'TVB');
