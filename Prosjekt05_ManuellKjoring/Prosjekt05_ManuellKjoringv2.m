@@ -19,7 +19,7 @@ clear; close all
 % Skal prosjektet gjennomføres online mot EV3 eller mot lagrede data?
 online = false;
 % Spesifiser et beskrivende filnavn for lagring av måledata
-filename = 'P04_MeasManuellKjoring_KH.mat';
+filename = 'P04_MeasManuellKjoring_MEH.mat';
 %--------------------------------------------------------------------------
 
 
@@ -198,7 +198,7 @@ while ~JoyMainSwitch
 
     % MAE
     if k > 1
-        MAE(k) = (1/k)*sum(abs(e));
+        MAE(k) = MAE(k-1) + abs(e(k)) / k;
     end
 
     % Beregn pådrag for fremover/tilbake-bevegelse og sving 
@@ -209,8 +209,10 @@ while ~JoyMainSwitch
 
     
     % Oppdater pådrag for hver motor
-    PowerA(k) = a * JoyForover(k) - b * JoySving(k);  % Eksempel på beregning
-    PowerB(k) = a * JoyForover(k) + b * JoySving(k);
+    % JoySving er en skalar, men opprinnelig beregning av pådrag forventet
+    % vektor (JoySving(k))!
+    PowerA(k) = a * JoyForover(k) - b * JoySving;  % Eksempel på beregning
+    PowerB(k) = a * JoyForover(k) + b * JoySving;
 
     % Beregn Total Variation for hver motor
     if k > 1
