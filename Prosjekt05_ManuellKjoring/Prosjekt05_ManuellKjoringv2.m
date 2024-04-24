@@ -17,9 +17,9 @@
 % Alltid lurt å rydde workspace opp først
 clear; close all
 % Skal prosjektet gjennomføres online mot EV3 eller mot lagrede data?
-online = false;
+online = true;
 % Spesifiser et beskrivende filnavn for lagring av måledata
-filename = 'P04_MeasManuellKjoring_MEH.mat';
+filename = 'P05_MeasManuellKjoring_OMV.mat';
 %--------------------------------------------------------------------------
 
 
@@ -211,8 +211,8 @@ while ~JoyMainSwitch
     % Oppdater pådrag for hver motor
     % JoySving er en skalar, men opprinnelig beregning av pådrag forventet
     % vektor (JoySving(k))!
-    PowerA(k) = a * JoyForover(k) - b * JoySving;  % Eksempel på beregning
-    PowerB(k) = a * JoyForover(k) + b * JoySving;
+    PowerA(k) = a * JoyForover(k) - b * JoySving(k);  % Eksempel på beregning
+    PowerB(k) = a * JoyForover(k) + b * JoySving(k);
 
     % Beregn Total Variation for hver motor
     if k > 1
@@ -276,11 +276,12 @@ while ~JoyMainSwitch
 
     subplot(3,2,3)
     plot(Tid(1:k),PowerA(1:k), 'b');
-    title('Power A')
+   
     hold on
     plot(Tid(1:k),PowerB(1:k), 'r');
-    title('Power B')
+    title('Power A og B')
     xlabel('Tid [sek]')
+    legend('P A', 'P B');
 
     subplot(3,2,4)
     plot(Tid(1:k),IAE(1:k));
@@ -312,14 +313,14 @@ end
 %               PLOT HISTOGRAM 
 
 fig2 = figure; % Ny figur for histogrammet
-histogram(Lys, 20, 'FaceColor', 'blue'); % Lager histogrammet for lys reflektert
+histogram(Lys(1:k-2), 20, 'FaceColor', 'blue'); % Lager histogrammet for lys reflektert
 hold on; % Holder på histogrammet for å legge til flere grafikkobjekter
 
 % Beregner og viser middelverdi og standardavvik for lys reflektert
-middelverdi = mean(Lys);
-standardavvik = std(Lys);
-gjennomsnittligTs = mean(Ts);
-antallMalinger = numel(Lys);  % Anta at 'Lys' inneholder alle lysmålingene
+middelverdi = mean(Lys(1:k-2));
+standardavvik = std(Lys(1:k-2));
+gjennomsnittligTs = mean(Ts(1:k-2));
+antallMalinger = numel(Lys)-2;  % Anta at 'Lys' inneholder alle lysmålingene
 
 % Legger til linjer for middelverdi og standardavvik
 xline(middelverdi, 'Color', 'red', 'LineWidth', 2, 'Label', 'Middelverdi');

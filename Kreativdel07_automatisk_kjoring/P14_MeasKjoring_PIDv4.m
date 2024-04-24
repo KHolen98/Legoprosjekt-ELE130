@@ -17,9 +17,9 @@
 % Alltid lurt å rydde workspace opp først
 clear; close all;
 % Skal prosjektet gjennomføres online mot EV3 eller mot lagrede data?
-online = false;
+online = true;
 % Spesifiser et beskrivende filnavn for lagring av måledata
-filename = 'P14_MeasKjoring_PID.mat';
+filename = 'P14_MeasKjoring_PI_fart.mat';
 %--------------------------------------------------------------------------
 
 
@@ -63,7 +63,7 @@ set(0, 'defaultTextFontSize', 16);
 JoyMainSwitch=0;
 k = 1;
 % Definer en terskel for hvit farge
-hvitTerskel = 70; 
+hvitTerskel = 60; 
 
 % Initialverdier for pådrag
 TVA = 0;
@@ -72,9 +72,9 @@ MAE(1) = 0;
 
 % Initialisering av PID-regulering variabler og tilhørende variabler
 u0 = 0;
-Kp = 0.5; 
-Ki = 0.01; 
-Kd = 0.01; 
+Kp = 2; 
+Ki = 0.2; 
+Kd = 0.0000; 
 I_sum = 0;
 e(1) = 0; 
 P(1) = 0;
@@ -89,6 +89,7 @@ PowerA = 0; % Initialiser PowerA for TV beregning
 PowerB = 0; % Initialiser PowerB for TV beregning
 PID_padrag = 0; % Initialiserer PID_padrag
 u_A = 0; % Startverdi
+grunnfart = 25;
 %+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 %                       GET TIME AND MEASUREMENT
 % Få tid og målinger fra sensorer, motorer og joystick
@@ -101,10 +102,10 @@ while ~JoyMainSwitch
         else
             Tid(k) = toc;
         end
-        
+        %Leser posisjon på motorer
         VinkelPosMotorA(k) = readRotation(motorA); 
         VinkelPosMotorB(k) = readRotation(motorB);   
-        % sensorer (bruk ikke Lys(k) og LysDirekte(k) samtidig)
+        
         Lys(k) = double(readLightIntensity(myColorSensor,'reflected'));
          % Sjekker om lysintensiteten overstiger hvit-terskelen
             if Lys(k) > hvitTerskel
@@ -113,6 +114,8 @@ while ~JoyMainSwitch
             end
         
         
+        
+        %PID regulator for sving
         if k > 1
             y = Lys(k);          
             r = Lys(1);   
@@ -126,6 +129,7 @@ while ~JoyMainSwitch
            
         end
         
+
         % Data fra styrestikke. 
         [JoyAxes,JoyButtons] = HentJoystickVerdier(joystick);
         JoyMainSwitch = JoyButtons(1);
@@ -178,8 +182,8 @@ while ~JoyMainSwitch
     
      % Oppdater pådrag for hver motor
     PID_padrag = max(min(u_A, maxPower), -maxPower); % Definerer PID_padrag her
-            PowerA(k) = max(min(10 + PID_padrag, maxPower), -maxPower);
-            PowerB(k) = max(min(10 - PID_padrag, maxPower), -maxPower);
+            PowerA(k) = max(min(grunnfart + PID_padrag, maxPower), -maxPower);
+            PowerB(k) = max(min(grunnfart - PID_padrag, maxPower), -maxPower);
             motorA.Speed = PowerA(k);
             motorB.Speed = PowerB(k);
             if online
@@ -271,6 +275,38 @@ while ~JoyMainSwitch
     k=k+1;
 end
 
+% +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%               PLOT HISTOGRAM 
+
+fig2 = figure; % Ny figur for histogrammet
+histogram(Lys, 20, 'FaceColor', 'blue'); % Lager histogrammet for lys reflektert
+hold on; % Holder på histogrammet for å legge til flere grafikkobjekter
+
+% Beregner og viser middelverdi og standardavvik for lys reflektert
+middelverdi = mean(Lys);
+standardavvik = std(Lys);
+gjennomsnittligTs = mean(Ts);
+antallMalinger = numel(Lys);  % Anta at 'Lys' inneholder alle lysmålingene
+
+% Legger til linjer for middelverdi og standardavvik
+xline(middelverdi, 'Color', 'red', 'LineWidth', 2, 'Label', 'Middelverdi');
+xline(middelverdi - standardavvik, 'Color', 'green', 'LineWidth', 2, 'LineStyle', '--', 'Label', 'Middelverdi - Std');
+xline(middelverdi + standardavvik, 'Color', 'green', 'LineWidth', 2, 'LineStyle', '--', 'Label', 'Middelverdi + Std');
+
+% Tekst for tekstboks
+tekst = sprintf('Middelverdi: %.2f\nStandardavvik: %.2f\nGjennomsnittlig Ts: %.2f sek\nAntall målinger: %d', ...
+                middelverdi, standardavvik, gjennomsnittligTs, antallMalinger);
+% Legger til en tekstboks med middelverdi og standardavvik
+dim = [.50 .2 .3 .3]; % [x y bredde høyde], relativt til figurvinduet
+annotation('textbox', dim, 'String', tekst, 'FitBoxToText', 'on', 'BackgroundColor', 'white');
+
+
+title('Histogram over lys reflektert');
+xlabel('Lysintensitet');
+ylabel('Frekvens');
+legend('Histogram', 'Middelverdi', 'Standardavvik');
+hold off; % Avslutter "hold on" modus
+
 % +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 %               STOP MOTORS OG LAGRE DATA
 
@@ -278,7 +314,7 @@ if online
     stop(motorA);
     stop(motorB);
     
-    save(filename,"Lys","Tid","e","PowerA","PowerB","VinkelPosMotorA","VinkelPosMotorB");
+    save(filename,"Lys","Tid","u_A","e","TVA","TVB","PowerA","PowerB","VinkelPosMotorA","VinkelPosMotorB");
     disp('Data lagret');
 end
 %------------------------------------------------------------------
